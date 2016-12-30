@@ -12,33 +12,46 @@ import Intents
 extension NSUserActivity: StartCallConvertible {
 
     var startCallHandle: String? {
-        guard
-          let interaction = interaction,
-          let startCallIntent = interaction.intent as? SupportedStartCallIntent,
-          let contact = startCallIntent.contacts?.first
-        else {
+        if #available(iOS 10.0, *) {
+            guard
+                let interaction = interaction,
+                let startCallIntent = interaction.intent as? SupportedStartCallIntent,
+                let contact = startCallIntent.contacts?.first
+                else {
+                    return nil
+            }
+            
+            return contact.personHandle?.value
+        } else {
+            // TODO: Fallback on earlier versions
             return nil
         }
-
-        return contact.personHandle?.value
     }
 
     var video: Bool? {
-        guard
-          let interaction = interaction,
-          let startCallIntent = interaction.intent as? SupportedStartCallIntent
-        else {
+        if #available(iOS 10.0, *) {
+            guard
+                let interaction = interaction,
+                let startCallIntent = interaction.intent as? SupportedStartCallIntent
+                else {
+                    return nil
+            }
+            
+            return startCallIntent is INStartVideoCallIntent
+        } else {
+            // TODO: Fallback on earlier versions
             return nil
         }
-
-        return startCallIntent is INStartVideoCallIntent
     }
-    
 }
 
 protocol SupportedStartCallIntent {
+    @available(iOS 10.0, *)
     var contacts: [INPerson]? { get }
 }
 
+@available(iOS 10.0, *)
 extension INStartAudioCallIntent: SupportedStartCallIntent {}
+
+@available(iOS 10.0, *)
 extension INStartVideoCallIntent: SupportedStartCallIntent {}

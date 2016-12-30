@@ -11,44 +11,69 @@ import CallKit
 
 final class SpeakerboxCallManager: NSObject {
 
-    let callController = CXCallController()
+    var callController: Any?
+    
+    override init() {
+        super.init()
+        if #available(iOS 10.0, *) {
+            callController = CXCallController()
+        } else {
+            // TODO: Fallback on earlier versions
+            callController = nil
+        }
+    }
 
     // MARK: Actions
 
     func startCall(handle: String, video: Bool = false) {
-        let handle = CXHandle(type: .phoneNumber, value: handle)
-        let startCallAction = CXStartCallAction(call: UUID(), handle: handle)
-
-        startCallAction.isVideo = video
-
-        let transaction = CXTransaction()
-        transaction.addAction(startCallAction)
-
-        requestTransaction(transaction)
+        if #available(iOS 10.0, *) {
+            let handle = CXHandle(type: .phoneNumber, value: handle)
+            let startCallAction = CXStartCallAction(call: UUID(), handle: handle)
+            
+            startCallAction.isVideo = video
+            
+            let transaction = CXTransaction()
+            transaction.addAction(startCallAction)
+            
+            requestTransaction(transaction)
+        } else {
+            // TODO: Fallback on earlier versions
+        }
     }
 
     func end(call: SpeakerboxCall) {
-        let endCallAction = CXEndCallAction(call: call.uuid)
-        let transaction = CXTransaction()
-        transaction.addAction(endCallAction)
-
-        requestTransaction(transaction)
+        if #available(iOS 10.0, *) {
+            let endCallAction = CXEndCallAction(call: call.uuid)
+            let transaction = CXTransaction()
+            transaction.addAction(endCallAction)
+            
+            requestTransaction(transaction)
+        } else {
+            // TODO: Fallback on earlier versions
+        }
     }
 
     func setHeld(call: SpeakerboxCall, onHold: Bool) {
-        let setHeldCallAction = CXSetHeldCallAction(call: call.uuid, onHold: onHold)
-        let transaction = CXTransaction()
-        transaction.addAction(setHeldCallAction)
-
-        requestTransaction(transaction)
+        if #available(iOS 10.0, *) {
+            let setHeldCallAction = CXSetHeldCallAction(call: call.uuid, onHold: onHold)
+            let transaction = CXTransaction()
+            transaction.addAction(setHeldCallAction)
+            
+            requestTransaction(transaction)
+        } else {
+            // TODO: Fallback on earlier versions
+        }
     }
 
+    @available(iOS 10.0, *)
     private func requestTransaction(_ transaction: CXTransaction) {
-        callController.request(transaction) { error in
-            if let error = error {
-                print("Error requesting transaction: \(error)")
-            } else {
-                print("Requested transaction successfully")
+        if let callController = callController as? CXCallController {
+            callController.request(transaction) { error in
+                if let error = error {
+                    print("Error requesting transaction: \(error)")
+                } else {
+                    print("Requested transaction successfully")
+                }
             }
         }
     }
